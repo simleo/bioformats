@@ -101,10 +101,8 @@ public class DFSHandle implements IRandomAccess {
 
   /* @see IRandomAccess.close() */
   public void close() throws IOException {
-    if (fs != null) fs.close();
     if (stream != null) stream.close();
     if (outStream != null) outStream.close();
-    fs = null;
     stream = null;
     outStream = null;
   }
