@@ -306,6 +306,9 @@ public class Location {
       if (id.startsWith("http://")) {
         handle = new URLHandle(mapId);
       }
+      else if (id.startsWith("hdfs://")) {
+        handle = new DFSHandle(mapId, writable ? "w" : "r");
+      }
       else if (allowArchiveHandles && ZipHandle.isZipFile(id)) {
         handle = new ZipHandle(mapId);
       }
