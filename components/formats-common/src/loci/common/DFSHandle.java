@@ -70,6 +70,9 @@ public class DFSHandle implements IRandomAccess {
   /** Backing output stream. */
   protected FSDataOutputStream outStream;
 
+  /** Byte ordering of this file. */
+  protected ByteOrder order;
+
   // -- Constructors --
 
   /**
@@ -90,6 +93,31 @@ public class DFSHandle implements IRandomAccess {
       throw new IllegalArgumentException(
         String.format("%s mode not in supported modes ('r', 'w')", mode));
     }
+    order = ByteOrder.BIG_ENDIAN;
+  }
+
+  private short adaptOrder(short x) {
+    return order.equals(ByteOrder.LITTLE_ENDIAN) ? DataTools.swap(x) : x;
+  }
+
+  private char adaptOrder(char x) {
+    return order.equals(ByteOrder.LITTLE_ENDIAN) ? DataTools.swap(x) : x;
+  }
+
+  private int adaptOrder(int x) {
+    return order.equals(ByteOrder.LITTLE_ENDIAN) ? DataTools.swap(x) : x;
+  }
+
+  private long adaptOrder(long x) {
+    return order.equals(ByteOrder.LITTLE_ENDIAN) ? DataTools.swap(x) : x;
+  }
+
+  private float adaptOrder(float x) {
+    return order.equals(ByteOrder.LITTLE_ENDIAN) ? DataTools.swap(x) : x;
+  }
+
+  private double adaptOrder(double x) {
+    return order.equals(ByteOrder.LITTLE_ENDIAN) ? DataTools.swap(x) : x;
   }
 
   // -- DFSHandle API methods --
@@ -204,7 +232,7 @@ public class DFSHandle implements IRandomAccess {
     if (stream == null) {
       throw new HandleException("This stream is write-only.");
     }
-    return stream.readDouble();
+    return adaptOrder(stream.readDouble());
   }
 
   /* @see java.io.DataInput.readFloat() */
@@ -212,7 +240,7 @@ public class DFSHandle implements IRandomAccess {
     if (stream == null) {
       throw new HandleException("This stream is write-only.");
     }
-    return stream.readFloat();
+    return adaptOrder(stream.readFloat());
   }
 
   /* @see java.io.DataInput.readFully(byte[]) */
@@ -236,7 +264,7 @@ public class DFSHandle implements IRandomAccess {
     if (stream == null) {
       throw new HandleException("This stream is write-only.");
     }
-    return stream.readInt();
+    return adaptOrder(stream.readInt());
   }
 
   /* @see java.io.DataInput.readLine() */
@@ -252,7 +280,7 @@ public class DFSHandle implements IRandomAccess {
     if (stream == null) {
       throw new HandleException("This stream is write-only.");
     }
-    return stream.readLong();
+    return adaptOrder(stream.readLong());
   }
 
   /* @see java.io.DataInput.readShort() */
@@ -260,7 +288,7 @@ public class DFSHandle implements IRandomAccess {
     if (stream == null) {
       throw new HandleException("This stream is write-only.");
     }
-    return stream.readShort();
+    return adaptOrder(stream.readShort());
   }
 
   /* @see java.io.DataInput.readUnsignedByte() */
@@ -276,7 +304,7 @@ public class DFSHandle implements IRandomAccess {
     if (stream == null) {
       throw new HandleException("This stream is write-only.");
     }
-    return stream.readUnsignedShort();
+    return readShort() & 0xffff;
   }
 
   /* @see java.io.DataInput.readUTF() */
@@ -318,7 +346,7 @@ public class DFSHandle implements IRandomAccess {
     if (outStream == null) {
       throw new HandleException("This stream is read-only.");
     }
-    outStream.write(b);
+    outStream.write(adaptOrder(b));
   }
 
   /* @see java.io.DataOutput.writeBoolean(boolean) */
@@ -334,7 +362,7 @@ public class DFSHandle implements IRandomAccess {
     if (outStream == null) {
       throw new HandleException("This stream is read-only.");
     }
-    outStream.writeByte(v);
+    outStream.writeByte(adaptOrder(v));
   }
 
   /* @see java.io.DataOutput.writeBytes(String) */
@@ -350,7 +378,7 @@ public class DFSHandle implements IRandomAccess {
     if (outStream == null) {
       throw new HandleException("This stream is read-only.");
     }
-    outStream.writeChar(v);
+    outStream.writeChar(adaptOrder(v));
   }
 
   /* @see java.io.DataOutput.writeChars(String) */
@@ -366,7 +394,7 @@ public class DFSHandle implements IRandomAccess {
     if (outStream == null) {
       throw new HandleException("This stream is read-only.");
     }
-    outStream.writeDouble(v);
+    outStream.writeDouble(adaptOrder(v));
   }
 
   /* @see java.io.DataOutput.writeFloat(float) */
@@ -374,7 +402,7 @@ public class DFSHandle implements IRandomAccess {
     if (outStream == null) {
       throw new HandleException("This stream is read-only.");
     }
-    outStream.writeFloat(v);
+    outStream.writeFloat(adaptOrder(v));
   }
 
   /* @see java.io.DataOutput.writeInt(int) */
@@ -382,7 +410,7 @@ public class DFSHandle implements IRandomAccess {
     if (outStream == null) {
       throw new HandleException("This stream is read-only.");
     }
-    outStream.writeInt(v);
+    outStream.writeInt(adaptOrder(v));
   }
 
   /* @see java.io.DataOutput.writeLong(long) */
@@ -390,7 +418,7 @@ public class DFSHandle implements IRandomAccess {
     if (outStream == null) {
       throw new HandleException("This stream is read-only.");
     }
-    outStream.writeLong(v);
+    outStream.writeLong(adaptOrder(v));
   }
 
   /* @see java.io.DataOutput.writeShort(int) */
@@ -398,7 +426,7 @@ public class DFSHandle implements IRandomAccess {
     if (outStream == null) {
       throw new HandleException("This stream is read-only.");
     }
-    outStream.writeShort(v);
+    outStream.writeShort(adaptOrder(v));
   }
 
   /* @see java.io.DataOutput.writeUTF(String)  */
@@ -410,10 +438,11 @@ public class DFSHandle implements IRandomAccess {
   }
 
   public ByteOrder getOrder() {
-    return null;
+    return order;
   }
 
   public void setOrder(ByteOrder order) {
+    this.order = order;
   }
 
 }
