@@ -77,23 +77,39 @@ public class DFSHandle implements IRandomAccess {
 
   /**
    * Create a new DFSHandle from a path with the specified name.
+   * @param bufferSize the size of the buffer to be used. If negative,
+   * Hadoop's configured / default buffer size will be used.
    */
-  public DFSHandle(String name, String mode) throws IOException {
+  public DFSHandle(String name, String mode, int bufferSize)
+      throws IOException {
     Configuration conf = new Configuration();
     fs = FileSystem.get(URI.create(name), conf);
     path = new Path(name);
-    // TODO: support more signatures for open() and create()
+    // TODO: support more signatures for create()
     if (mode.equals("r")) {
-      stream = fs.open(path);
+      stream = (bufferSize < 0) ? fs.open(path) : fs.open(path, bufferSize);
     }
     else if (mode.equals("w")) {
-      outStream = fs.create(path);
+      if (bufferSize < 0) {
+        outStream = fs.create(path);
+      }
+      else {
+        boolean overwrite = true;
+        outStream = fs.create(path, overwrite, bufferSize);
+      }
     }
     else {
       throw new IllegalArgumentException(
         String.format("%s mode not in supported modes ('r', 'w')", mode));
     }
     order = ByteOrder.BIG_ENDIAN;
+  }
+
+  /**
+   * Create a new DFSHandle from a path with the specified name.
+   */
+  public DFSHandle(String name, String mode) throws IOException {
+    this(name, mode, -1);
   }
 
   private short adaptOrder(short x) {

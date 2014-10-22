@@ -69,7 +69,7 @@ class DFSHandleProvider implements IRandomAccessProvider {
       stream.close();
     }
     fs.deleteOnExit(path);
-    return new DFSHandle(name, mode);  // TODO: bufferSize
+    return new DFSHandle(name, mode, bufferSize);
   }
 
 }
