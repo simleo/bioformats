@@ -59,6 +59,7 @@ public class IRandomAccessProviderFactory {
     providers.put("NIOFileHandle", new NIOFileHandleProvider());
     providers.put("URLHandle", new URLHandleProvider());
     providers.put("ZipHandle", new ZipHandleProvider());
+    providers.put("DFSHandle", new DFSHandleProvider());
   }
 
   public IRandomAccessProvider getInstance(String provider) {

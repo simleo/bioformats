@@ -111,6 +111,17 @@
             <package name="loci.common.utests"/>
         </packages>
     </test>
+    <test name="DFSHandle">
+        <parameter name="provider" value="DFSHandle"/>
+        <groups>
+            <run>
+                <include name="readTests"/>
+            </run>
+        </groups>
+        <packages>
+            <package name="loci.common.utests"/>
+        </packages>
+    </test>
     <test name="URLHandle">
         <parameter name="provider" value="URLHandle"/>
         <groups>
