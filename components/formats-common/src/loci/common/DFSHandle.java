@@ -164,10 +164,7 @@ public class DFSHandle implements IRandomAccess {
 
   /* @see IRandomAccess.read(byte[]) */
   public int read(byte[] b) throws IOException {
-    if (stream == null) {
-      throw new HandleException("This stream is write-only.");
-    }
-    return stream.read(b);
+    return read(b, 0, b.length);
   }
 
   /* @see IRandomAccess.read(byte[], int, int) */
@@ -175,7 +172,8 @@ public class DFSHandle implements IRandomAccess {
     if (stream == null) {
       throw new HandleException("This stream is write-only.");
     }
-    return stream.read(b, off, len);
+    int readLength = stream.read(b, off, len);  // -1 if EOF has been reached
+    return readLength == -1 ? 0 : readLength;
   }
 
   /* @see IRandomAccess.read(ByteBuffer) */
