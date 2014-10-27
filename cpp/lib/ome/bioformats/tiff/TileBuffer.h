@@ -35,68 +35,92 @@
  * #L%
  */
 
-#include <ome/bioformats/CoreMetadata.h>
+#ifndef OME_BIOFORMATS_TIFF_TILEBUFFER_H
+#define OME_BIOFORMATS_TIFF_TILEBUFFER_H
+
+#include <ome/bioformats/Types.h>
+#include <ome/bioformats/tiff/Types.h>
+
+#include <ome/xml/model/enums/PixelType.h>
 
 namespace ome
 {
   namespace bioformats
   {
-
-    CoreMetadata::CoreMetadata():
-      sizeX(1),
-      sizeY(1),
-      sizeZ(1),
-      sizeC(1),
-      sizeT(1),
-      thumbSizeX(1),
-      thumbSizeY(1),
-      pixelType(ome::xml::model::enums::PixelType::UINT8),
-      bitsPerPixel(0), // Default to full size of pixelType
-      imageCount(1),
-      moduloZ("Z"),
-      moduloT("T"),
-      moduloC("C"),
-      dimensionOrder(ome::xml::model::enums::DimensionOrder::XYZTC),
-      orderCertain(true),
-      rgb(false),
-      littleEndian(false),
-      interleaved(false),
-      indexed(false),
-      falseColor(true),
-      metadataComplete(true),
-      seriesMetadata(),
-      thumbnail(false),
-      resolutionCount(1)
+    namespace tiff
     {
-    }
 
-    CoreMetadata::CoreMetadata(const CoreMetadata &copy):
-      sizeX(copy.sizeX),
-      sizeY(copy.sizeY),
-      sizeZ(copy.sizeZ),
-      sizeC(copy.sizeC),
-      sizeT(copy.sizeT),
-      thumbSizeX(copy.thumbSizeX),
-      thumbSizeY(copy.thumbSizeY),
-      pixelType(copy.pixelType),
-      bitsPerPixel(copy.bitsPerPixel),
-      imageCount(copy.imageCount),
-      moduloZ(copy.moduloZ),
-      moduloT(copy.moduloT),
-      moduloC(copy.moduloC),
-      dimensionOrder(copy.dimensionOrder),
-      orderCertain(copy.orderCertain),
-      rgb(copy.rgb),
-      littleEndian(copy.littleEndian),
-      interleaved(copy.interleaved),
-      indexed(copy.indexed),
-      falseColor(copy.falseColor),
-      metadataComplete(copy.metadataComplete),
-      seriesMetadata(copy.seriesMetadata),
-      thumbnail(copy.thumbnail),
-      resolutionCount(copy.resolutionCount)
-    {
-    }
+      class IFD;
 
+      /**
+       * Tile pixel data buffer.
+       *
+       * Pixel data for a single tile.
+       */
+      class TileBuffer
+      {
+      public:
+        /**
+         * Constructor.
+         *
+         * @param size the buffer size (bytes).
+         */
+        TileBuffer(dimension_size_type size);
+
+        /// Destructor.
+        virtual ~TileBuffer();
+
+      private:
+        // To avoid unintentional and expensive copies, copying and
+        // assignment of buffers is prevented.
+
+        /// Copy constructor (deleted).
+        TileBuffer (const TileBuffer&);
+
+        /// Assignment operator (deleted).
+        TileBuffer&
+        operator= (const TileBuffer&);
+
+      public:
+        /**
+         * Get the buffer size.
+         *
+         * @returns the buffer size.
+         */
+        dimension_size_type
+        size() const;
+
+        /**
+         * Get the buffer data.
+         *
+         * @returns a pointer to the data.
+         */
+        uint8_t *
+        data();
+
+        /**
+         * Get the buffer data.
+         *
+         * @returns a pointer to the data.
+         */
+        const uint8_t *
+        data() const;
+
+      private:
+        /// Buffer size (bytes).
+        dimension_size_type bufsize;
+        /// Raw buffer.
+        uint8_t *buf;
+      };
+
+    }
   }
 }
+
+#endif // OME_BIOFORMATS_TIFF_TILEBUFFER_H
+
+/*
+ * Local Variables:
+ * mode:C++
+ * End:
+ */

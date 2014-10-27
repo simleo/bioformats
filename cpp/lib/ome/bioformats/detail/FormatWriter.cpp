@@ -81,7 +81,6 @@ namespace ome
         out(),
         series(0),
         compression(boost::none),
-        planeInitialized(),
         sequential(false),
         framesPerSecond(0),
         metadataRetrieve(std::make_shared<DummyMetadata>())
@@ -105,9 +104,6 @@ namespace ome
 
             std::shared_ptr<const ::ome::xml::meta::MetadataRetrieve> mr(getMetadataRetrieve());
 
-            planeInitialized.clear();
-            planeInitialized.resize(mr->getImageCount());
-
             for (dimension_size_type  s = 0;
                  s < mr->getImageCount();
                  ++s)
@@ -118,9 +114,6 @@ namespace ome
                 dimension_size_type t = mr->getPixelsSizeT(s);
                 dimension_size_type c = mr->getPixelsSizeC(s);
                 c /= mr->getChannelSamplesPerPixel(s, 0);
-                dimension_size_type planes = z * t * c;
-
-                planeInitialized.at(s).resize(planes);
               }
 
             currentId = id;
@@ -136,7 +129,6 @@ namespace ome
           {
             currentId = boost::none;
             series = 0;
-            planeInitialized.clear();
           }
       }
 

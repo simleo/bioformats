@@ -35,68 +35,49 @@
  * #L%
  */
 
-#include <ome/bioformats/CoreMetadata.h>
+#include <ome/bioformats/PixelProperties.h>
+#include <ome/bioformats/tiff/TileBuffer.h>
+
+#include <tiffio.h>
 
 namespace ome
 {
   namespace bioformats
   {
-
-    CoreMetadata::CoreMetadata():
-      sizeX(1),
-      sizeY(1),
-      sizeZ(1),
-      sizeC(1),
-      sizeT(1),
-      thumbSizeX(1),
-      thumbSizeY(1),
-      pixelType(ome::xml::model::enums::PixelType::UINT8),
-      bitsPerPixel(0), // Default to full size of pixelType
-      imageCount(1),
-      moduloZ("Z"),
-      moduloT("T"),
-      moduloC("C"),
-      dimensionOrder(ome::xml::model::enums::DimensionOrder::XYZTC),
-      orderCertain(true),
-      rgb(false),
-      littleEndian(false),
-      interleaved(false),
-      indexed(false),
-      falseColor(true),
-      metadataComplete(true),
-      seriesMetadata(),
-      thumbnail(false),
-      resolutionCount(1)
+    namespace tiff
     {
-    }
 
-    CoreMetadata::CoreMetadata(const CoreMetadata &copy):
-      sizeX(copy.sizeX),
-      sizeY(copy.sizeY),
-      sizeZ(copy.sizeZ),
-      sizeC(copy.sizeC),
-      sizeT(copy.sizeT),
-      thumbSizeX(copy.thumbSizeX),
-      thumbSizeY(copy.thumbSizeY),
-      pixelType(copy.pixelType),
-      bitsPerPixel(copy.bitsPerPixel),
-      imageCount(copy.imageCount),
-      moduloZ(copy.moduloZ),
-      moduloT(copy.moduloT),
-      moduloC(copy.moduloC),
-      dimensionOrder(copy.dimensionOrder),
-      orderCertain(copy.orderCertain),
-      rgb(copy.rgb),
-      littleEndian(copy.littleEndian),
-      interleaved(copy.interleaved),
-      indexed(copy.indexed),
-      falseColor(copy.falseColor),
-      metadataComplete(copy.metadataComplete),
-      seriesMetadata(copy.seriesMetadata),
-      thumbnail(copy.thumbnail),
-      resolutionCount(copy.resolutionCount)
-    {
-    }
+      TileBuffer::TileBuffer(dimension_size_type size):
+        bufsize(size),
+        buf(reinterpret_cast<uint8_t *>(_TIFFmalloc(bufsize)))
+      {
+        _TIFFmemset(buf, 0, bufsize);
+      }
 
+      TileBuffer::~TileBuffer()
+      {
+        if (buf)
+          _TIFFfree(buf);
+      }
+
+      dimension_size_type
+      TileBuffer::size() const
+      {
+        return bufsize;
+      }
+
+      uint8_t *
+      TileBuffer::data()
+      {
+        return buf;
+      }
+
+      const uint8_t *
+      TileBuffer::data() const
+      {
+        return buf;
+      }
+
+    }
   }
 }
