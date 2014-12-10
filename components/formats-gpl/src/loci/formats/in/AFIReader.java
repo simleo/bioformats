@@ -46,6 +46,7 @@ import ome.xml.model.primitives.PositiveFloat;
 import ome.xml.model.primitives.PositiveInteger;
 import ome.xml.model.primitives.Timestamp;
 
+import ome.units.quantity.Length;
 import ome.units.quantity.Time;
 import ome.units.UNITS;
 
@@ -53,10 +54,6 @@ import org.xml.sax.Attributes;
 
 /**
  * AFIReader is the file format reader for Aperio AFI files.
- *
- * <dl><dt><b>Source code:</b></dt>
- * <dd><a href="http://trac.openmicroscopy.org.uk/ome/browser/bioformats.git/components/bio-formats/src/loci/formats/in/AFIReader.java">Trac</a>,
- * <a href="http://git.openmicroscopy.org/?p=bioformats.git;a=blob;f=components/bio-formats/src/loci/formats/in/AFIReader.java;hb=HEAD">Gitweb</a></dd></dl>
  *
  * @author Melissa Linkert melissa at glencoesoftware.com
  */
@@ -84,6 +81,7 @@ public class AFIReader extends FormatReader {
   // -- IFormatReader API methods --
 
   /* @see loci.formats.IFormatReader#isThisType(RandomAccessInputStream) */
+  @Override
   public boolean isThisType(RandomAccessInputStream stream) throws IOException {
     final int blockLen = 4;
     if (!FormatTools.validStream(stream, blockLen, false)) return false;
@@ -91,21 +89,25 @@ public class AFIReader extends FormatReader {
   }
 
   /* @see loci.formats.IFormatReader#isSingleFile(String) */
+  @Override
   public boolean isSingleFile(String id) throws FormatException, IOException {
     return false;
   }
 
   /* @see loci.formats.IFormatReader#getOptimalTileWidth() */
+  @Override
   public int getOptimalTileWidth() {
     return reader[0].getOptimalTileWidth();
   }
 
   /* @see loci.formats.IFormatReader#getOptimalTileHeight() */
+  @Override
   public int getOptimalTileHeight() {
     return reader[0].getOptimalTileHeight();
   }
 
   /* @see loci.formats.IFormatReader#openThumbBytes(int) */
+  @Override
   public byte[] openThumbBytes(int no) throws FormatException, IOException {
     FormatTools.assertId(currentId, true, 1);
 
@@ -125,6 +127,7 @@ public class AFIReader extends FormatReader {
   /**
    * @see loci.formats.IFormatReader#openBytes(int, byte[], int, int, int, int)
    */
+  @Override
   public byte[] openBytes(int no, byte[] buf, int x, int y, int w, int h)
     throws FormatException, IOException
   {
@@ -144,6 +147,7 @@ public class AFIReader extends FormatReader {
   }
 
   /* @see loci.formats.IFormatReader#getSeriesUsedFiles(boolean) */
+  @Override
   public String[] getSeriesUsedFiles(boolean noPixels) {
     FormatTools.assertId(currentId, true, 1);
 
@@ -160,11 +164,13 @@ public class AFIReader extends FormatReader {
   }
 
   /* @see loci.formats.IFormatReader#fileGroupOption(String) */
+  @Override
   public int fileGroupOption(String id) throws FormatException, IOException {
     return FormatTools.MUST_GROUP;
   }
 
   /* @see loci.formats.IFormatReader#close(boolean) */
+  @Override
   public void close(boolean fileOnly) throws IOException {
     super.close(fileOnly);
     if (!fileOnly) {
@@ -183,6 +189,7 @@ public class AFIReader extends FormatReader {
   // -- Internal FormatReader API methods --
 
   /* @see loci.formats.FormatReader#initFile(String) */
+  @Override
   protected void initFile(String id) throws FormatException, IOException {
     super.initFile(id);
 
@@ -241,11 +248,11 @@ public class AFIReader extends FormatReader {
     }
 
     if (!minimalMetadata) {
-      PositiveFloat[] emission = new PositiveFloat[pixels.size()];
-      PositiveFloat[] excitation = new PositiveFloat[pixels.size()];
+      Length[] emission = new Length[pixels.size()];
+      Length[] excitation = new Length[pixels.size()];
       Double[] exposure = new Double[pixels.size()];
       Timestamp[] datestamp = new Timestamp[pixels.size()];
-      double[] physicalSizes = null;
+      Length[] physicalSizes = null;
       double magnification = Double.NaN;
 
       for (int c=0; c<pixels.size(); c++) {
@@ -275,9 +282,10 @@ public class AFIReader extends FormatReader {
         store.setObjectiveSettingsID(objective, i);
 
         if (i < physicalSizes.length &&
-          physicalSizes[i] - Constants.EPSILON > 0)
+          physicalSizes[i] != null &&
+          physicalSizes[i].value(UNITS.MICROM).doubleValue() - Constants.EPSILON > 0)
         {
-          PositiveFloat size = new PositiveFloat(physicalSizes[i]);
+          Length size = physicalSizes[i];
           store.setPixelsPhysicalSizeX(size, i);
           store.setPixelsPhysicalSizeY(size, i);
         }
@@ -292,9 +300,7 @@ public class AFIReader extends FormatReader {
             store.setChannelExcitationWavelength(excitation[c], i, c);
           }
 
-          if (exposure[c] != null) {
-            store.setPlaneExposureTime(new Time(exposure[c], UNITS.S), i, c);
-          }
+          store.setPlaneExposureTime(FormatTools.createTime(exposure[c], UNITS.S), i, c);
         }
       }
     }
@@ -305,6 +311,7 @@ public class AFIReader extends FormatReader {
   class AFIHandler extends BaseHandler {
     private String currentElement;
 
+    @Override
     public void characters(char[] ch, int start, int length) {
       String value = new String(ch, start, length);
 
@@ -313,6 +320,7 @@ public class AFIReader extends FormatReader {
       }
     }
 
+    @Override
     public void startElement(String uri, String localName, String qName,
       Attributes attributes)
     {

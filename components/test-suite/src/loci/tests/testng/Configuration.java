@@ -49,13 +49,11 @@ import ome.xml.model.primitives.PositiveInteger;
 import ome.xml.model.primitives.PositiveFloat;
 import ome.xml.model.primitives.Timestamp;
 
+import ome.units.quantity.Length;
 import ome.units.quantity.Time;
 import ome.units.UNITS;
 
 /**
- * <dl><dt><b>Source code:</b></dt>
- * <dd><a href="http://trac.openmicroscopy.org.uk/ome/browser/bioformats.git/components/test-suite/src/loci/tests/testng/Configuration.java">Trac</a>,
- * <a href="http://git.openmicroscopy.org/?p=bioformats.git;a=blob;f=components/test-suite/src/loci/tests/testng/Configuration.java;hb=HEAD">Gitweb</a></dd></dl>
  */
 public class Configuration {
 
@@ -341,6 +339,7 @@ public class Configuration {
 
   // -- Object API methods --
 
+  @Override
   public boolean equals(Object o) {
     if (!(o instanceof Configuration)) return false;
 
@@ -348,6 +347,7 @@ public class Configuration {
     return this.getINI().equals(thatConfig.getINI());
   }
 
+  @Override
   public int hashCode() {
     return this.getINI().hashCode();
   }
@@ -466,15 +466,15 @@ public class Configuration {
       seriesTable.put(NAME, retrieve.getImageName(series));
       seriesTable.put(DESCRIPTION, retrieve.getImageDescription(series));
 
-      PositiveFloat physicalX = retrieve.getPixelsPhysicalSizeX(series);
+      Length physicalX = retrieve.getPixelsPhysicalSizeX(series);
       if (physicalX != null) {
         seriesTable.put(PHYSICAL_SIZE_X, physicalX.toString());
       }
-      PositiveFloat physicalY = retrieve.getPixelsPhysicalSizeY(series);
+      Length physicalY = retrieve.getPixelsPhysicalSizeY(series);
       if (physicalY != null) {
         seriesTable.put(PHYSICAL_SIZE_Y, physicalY.toString());
       }
-      PositiveFloat physicalZ = retrieve.getPixelsPhysicalSizeZ(series);
+      Length physicalZ = retrieve.getPixelsPhysicalSizeZ(series);
       if (physicalZ != null) {
         seriesTable.put(PHYSICAL_SIZE_Z, physicalZ.toString());
       }
@@ -508,15 +508,14 @@ public class Configuration {
         }
         catch (NullPointerException e) { }
 
-        PositiveFloat emWavelength =
-          retrieve.getChannelEmissionWavelength(series, c);
+        Length emWavelength = retrieve.getChannelEmissionWavelength(series, c);
         if (emWavelength != null) {
-          seriesTable.put(EMISSION_WAVELENGTH + c, emWavelength.toString());
+          seriesTable.put(EMISSION_WAVELENGTH + c, emWavelength.value(UNITS.NM).toString());
         }
-        PositiveFloat exWavelength =
+        Length exWavelength =
           retrieve.getChannelExcitationWavelength(series, c);
         if (exWavelength != null) {
-          seriesTable.put(EXCITATION_WAVELENGTH + c, exWavelength.toString());
+          seriesTable.put(EXCITATION_WAVELENGTH + c, exWavelength.value(UNITS.NM).toString());
         }
         try {
           seriesTable.put(DETECTOR + c,

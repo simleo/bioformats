@@ -2,7 +2,7 @@
  * #%L
  * OME Bio-Formats package for reading and converting biological file formats.
  * %%
- * Copyright (C) 2005 - 2013 Open Microscopy Environment:
+ * Copyright (C) 2005 - 2014 Open Microscopy Environment:
  *   - Board of Regents of the University of Wisconsin-Madison
  *   - Glencoe Software, Inc.
  *   - University of Dundee
@@ -39,15 +39,13 @@ import loci.formats.meta.MetadataStore;
 import ome.xml.model.primitives.PositiveFloat;
 import ome.xml.model.primitives.Timestamp;
 
+import ome.units.quantity.Length;
+import ome.units.quantity.Temperature;
 import ome.units.quantity.Time;
 import ome.units.UNITS;
 
 /**
  * KodakReader is the file format reader for Kodak Molecular Imaging .bip files.
- *
- * <dl><dt><b>Source code:</b></dt>
- * <dd><a href="http://trac.openmicroscopy.org.uk/ome/browser/bioformats.git/components/bio-formats/src/loci/formats/in/KodakReader.java">Trac</a>,
- * <a href="http://git.openmicroscopy.org/?p=bioformats.git;a=blob;f=components/bio-formats/src/loci/formats/in/KodakReader.java;hb=HEAD">Gitweb</a></dd></dl>
  */
 public class KodakReader extends FormatReader {
 
@@ -75,6 +73,7 @@ public class KodakReader extends FormatReader {
   // -- IFormatReader API methods --
 
   /* @see loci.formats.IFormatReader#isThisType(RandomAccessInputStream) */
+  @Override
   public boolean isThisType(RandomAccessInputStream stream) throws IOException {
     final int blockLen = 16;
     if (!FormatTools.validStream(stream, blockLen, false)) return false;
@@ -84,6 +83,7 @@ public class KodakReader extends FormatReader {
   /**
    * @see loci.formats.IFormatReader#openBytes(int, byte[], int, int, int, int)
    */
+  @Override
   public byte[] openBytes(int no, byte[] buf, int x, int y, int w, int h)
     throws FormatException, IOException
   {
@@ -96,6 +96,7 @@ public class KodakReader extends FormatReader {
   }
 
   /* @see loci.formats.IFormatReader#close(boolean) */
+  @Override
   public void close(boolean fileOnly) throws IOException {
     super.close(fileOnly);
     if (!fileOnly) {
@@ -106,6 +107,7 @@ public class KodakReader extends FormatReader {
   // -- Internal FormatReader API methods --
 
   /* @see loci.formats.FormatReader#initFile(String) */
+  @Override
   protected void initFile(String id) throws FormatException, IOException {
     super.initFile(id);
     in = new RandomAccessInputStream(id);
@@ -213,7 +215,7 @@ public class KodakReader extends FormatReader {
         Double size = new Double(value);
         size = 1.0 / (size * (1.0 / 25400));
 
-        PositiveFloat sizeY = FormatTools.getPhysicalSizeY(size);
+        Length sizeY = FormatTools.getPhysicalSizeY(size);
         if (sizeY != null) {
           store.setPixelsPhysicalSizeY(sizeY, 0);
         }
@@ -226,14 +228,15 @@ public class KodakReader extends FormatReader {
         Double size = new Double(value);
         size = 1.0 / (size * (1.0 / 25400));
 
-        PositiveFloat sizeX = FormatTools.getPhysicalSizeX(size);
+        Length sizeX = FormatTools.getPhysicalSizeX(size);
         if (sizeX != null) {
           store.setPixelsPhysicalSizeX(sizeX, 0);
         }
       }
       else if (key.equals("CCD Temperature")) {
         Double temp = new Double(value.substring(0, value.indexOf(" ")));
-        store.setImagingEnvironmentTemperature(temp, 0);
+        store.setImagingEnvironmentTemperature(
+                new Temperature(temp, UNITS.DEGREEC), 0);
       }
     }
   }

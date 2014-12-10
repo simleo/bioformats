@@ -56,7 +56,6 @@ import loci.formats.tiff.TiffParser;
  * The cif file format is tiff-like, but doesn't adhere to
  * the TIFF standard, so we use the TiffParser where we can, 
  * but do not use the TiffReader hierarchy.
- *
  */
 public class FlowSightReader extends FormatReader {
   final private static int CHANNEL_COUNT_TAG = 33000;
@@ -78,7 +77,7 @@ public class FlowSightReader extends FormatReader {
     CHANNEL_DESCS_TAG
   };
 
-  private TiffParser tiffParser;
+  private transient TiffParser tiffParser;
   private long [] ifdOffsets;
 
   private String [] channelNames;
@@ -221,6 +220,14 @@ public class FlowSightReader extends FormatReader {
     ifdOffsets = null;
     channelNames = null;
     channelDescs = null;
+  }
+
+  @Override
+  public void reopenFile() throws IOException {
+    super.reopenFile();
+    tiffParser = new TiffParser(in);
+    tiffParser.setDoCaching(false);
+    tiffParser.setUse64BitOffsets(false);
   }
 
   @Override

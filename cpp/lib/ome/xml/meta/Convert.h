@@ -1,7 +1,6 @@
 /*
  * #%L
- * OME-COMPAT C++ library for C++ compatibility/portability
- * %%
+ * OME-BIOFORMATS C++ library for image IO.
  * Copyright © 2006 - 2014 Open Microscopy Environment:
  *   - Massachusetts Institute of Technology
  *   - National Institutes of Health
@@ -36,5 +35,40 @@
  * #L%
  */
 
-// This file exists solely to satisfy the mach linker, which doesn't like
-// empty .a archives.
+#ifndef OME_BIOFORMATS_META_CONVERT_H
+#define OME_BIOFORMATS_META_CONVERT_H
+
+#include <ome/xml/meta/MetadataStore.h>
+#include <ome/xml/meta/MetadataRetrieve.h>
+
+namespace ome
+{
+  namespace xml
+  {
+    namespace meta
+    {
+
+      /**
+       * A utility class containing a method for piping a source
+       * MetadataRetrieve object into a destination MetadataStore.
+       *
+       * This allows conversion between two different storage media.
+       *
+       * @param src the source object.
+       * @param dest the destination object.
+       */
+      void
+      convert(const MetadataRetrieve& src,
+              MetadataStore&          dest);
+
+    }
+  }
+}
+
+#endif // OME_BIOFORMATS_META_CONVERT_H
+
+/*
+ * Local Variables:
+ * mode:C++
+ * End:
+ */

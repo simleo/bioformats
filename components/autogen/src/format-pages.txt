@@ -114,7 +114,7 @@ extensions = .img, .hdr
 developer = `Mayo Foundation Biomedical Imaging Resource <http://www.mayo.edu/bir>`_
 bsd = no
 export = no
-weHave = * `an Analyze 7.5 specification document <http://analyzedirect.com/support/10.0Documents/Analyze_Resource_01.pdf>`_ \n
+weHave = * `an Analyze 7.5 specification document <http://web.archive.org/web/20070927191351/http://www.mayo.edu/bir/PDF/ANALYZE75.pdf>`_ \n
 * several Analyze 7.5 datasets
 pixelsRating = Very good
 metadataRating = Good
@@ -1054,7 +1054,7 @@ developer = `Independent JPEG Group <http://www.ijg.org/>`_
 bsd = yes
 export = yes
 software = `JJ2000 (JPEG 2000 library for Java) <http://code.google.com/p/jj2000/>`_
-weHave = * a `JPEG 2000 specification document <http://www.jpeg.org/jpeg2000/CDs15444.html>`_ (final draft, from 2000, in PDF) \n
+weHave = * a JPEG 2000 specification document (free draft from 2000, no longer available online) \n
 * a few .jp2 files
 pixelsRating = Very good
 metadataRating = Poor
@@ -1132,8 +1132,6 @@ opennessRating = Poor
 presenceRating = Poor
 utilityRating = Poor
 reader = KhorosReader.java
-notes = .. seealso:: \n
-  `VisiQuest software overview (formerly known as KhorosPro) <http://www.accusoft.com/products/visiquest/>`_
 
 [Kodak BIP]
 extensions = .bip

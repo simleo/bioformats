@@ -2,7 +2,7 @@
  * #%L
  * OME Bio-Formats package for reading and converting biological file formats.
  * %%
- * Copyright (C) 2005 - 2013 Open Microscopy Environment:
+ * Copyright (C) 2005 - 2014 Open Microscopy Environment:
  *   - Board of Regents of the University of Wisconsin-Madison
  *   - Glencoe Software, Inc.
  *   - University of Dundee
@@ -37,20 +37,19 @@ import loci.formats.meta.MetadataStore;
 import loci.formats.tiff.IFD;
 import loci.formats.tiff.TiffParser;
 import loci.formats.tiff.TiffRational;
-
 import ome.xml.model.primitives.PositiveFloat;
 import ome.xml.model.primitives.Timestamp;
 
+import ome.units.quantity.ElectricPotential;
+import ome.units.quantity.Frequency;
+import ome.units.quantity.Length;
+import ome.units.quantity.Temperature;
 import ome.units.quantity.Time;
 import ome.units.UNITS;
 
 /**
  * FluoviewReader is the file format reader for
  * Olympus Fluoview TIFF files AND Andor Bio-imaging Division (ABD) TIFF files.
- *
- * <dl><dt><b>Source code:</b></dt>
- * <dd><a href="http://trac.openmicroscopy.org.uk/ome/browser/bioformats.git/components/bio-formats/src/loci/formats/in/FluoviewReader.java">Trac</a>,
- * <a href="http://git.openmicroscopy.org/?p=bioformats.git;a=blob;f=components/bio-formats/src/loci/formats/in/FluoviewReader.java;hb=HEAD">Gitweb</a></dd></dl>
  *
  * @author Eric Kjellman egkjellman at wisc.edu
  * @author Melissa Linkert melissa at glencoesoftware.com
@@ -133,6 +132,7 @@ public class FluoviewReader extends BaseTiffReader {
   // -- IFormatReader API methods --
 
   /* @see loci.formats.IFormatReader#isThisType(RandomAccessInputStream) */
+  @Override
   public boolean isThisType(RandomAccessInputStream stream) throws IOException {
     TiffParser tp = new TiffParser(stream);
     IFD ifd = tp.getFirstIFD();
@@ -148,10 +148,15 @@ public class FluoviewReader extends BaseTiffReader {
   /**
    * @see loci.formats.IFormatReader#openBytes(int, byte[], int, int, int, int)
    */
+  @Override
   public byte[] openBytes(int no, byte[] buf, int x, int y, int w, int h)
     throws FormatException, IOException
   {
     int image = getImageIndex(no);
+
+    if (tiffParser == null) {
+      initTiffParser();
+    }
 
     if (getSizeY() == ifds.get(0).getImageLength()) {
       tiffParser.getSamples(ifds.get(image), buf, x, y, w, h);
@@ -165,6 +170,7 @@ public class FluoviewReader extends BaseTiffReader {
   }
 
   /* @see loci.formats.IFormatReader#close(boolean) */
+  @Override
   public void close(boolean fileOnly) throws IOException {
     super.close(fileOnly);
     if (!fileOnly) {
@@ -189,6 +195,7 @@ public class FluoviewReader extends BaseTiffReader {
   // -- Internal BaseTiffReader API methods --
 
   /* @see loci.formats.BaseTiffReader#initStandardMetadata() */
+  @Override
   protected void initStandardMetadata() throws FormatException, IOException {
     super.initStandardMetadata();
 
@@ -384,6 +391,7 @@ public class FluoviewReader extends BaseTiffReader {
   }
 
   /* @see loci.formats.in.BaseTiffReader#initMetadataStore() */
+  @Override
   protected void initMetadataStore() throws FormatException {
     super.initMetadataStore();
     MetadataStore store = makeFilterMetadata();
@@ -423,9 +431,9 @@ public class FluoviewReader extends BaseTiffReader {
 
     // populate Dimensions
     for (int i=0; i<getSeriesCount(); i++) {
-      PositiveFloat sizeX = FormatTools.getPhysicalSizeX(voxelX);
-      PositiveFloat sizeY = FormatTools.getPhysicalSizeY(voxelY);
-      PositiveFloat sizeZ = FormatTools.getPhysicalSizeZ(voxelZ);
+      Length sizeX = FormatTools.getPhysicalSizeX(voxelX);
+      Length sizeY = FormatTools.getPhysicalSizeY(voxelY);
+      Length sizeZ = FormatTools.getPhysicalSizeZ(voxelZ);
       if (sizeX != null) {
         store.setPixelsPhysicalSizeX(sizeX, i);
       }
@@ -466,9 +474,12 @@ public class FluoviewReader extends BaseTiffReader {
       }
 
       for (int image=0; image<getImageCount(); image++) {
-        store.setPlanePositionX(posX, i, image);
-        store.setPlanePositionY(posY, i, image);
-        store.setPlanePositionZ(posZ, i, image);
+        final Length xl = new Length(posX, UNITS.REFERENCEFRAME);
+        final Length yl = new Length(posY, UNITS.REFERENCEFRAME);
+        final Length zl = new Length(posZ, UNITS.REFERENCEFRAME);
+        store.setPlanePositionX(xl, i, image);
+        store.setPlanePositionY(yl, i, image);
+        store.setPlanePositionZ(zl, i, image);
       }
     }
 
@@ -486,7 +497,8 @@ public class FluoviewReader extends BaseTiffReader {
 
     for (int i=0; i<getSizeC(); i++) {
       if (voltages != null && voltages[i] != null) {
-        store.setDetectorSettingsVoltage(new Double(voltages[i]), 0, i);
+        store.setDetectorSettingsVoltage(
+                new ElectricPotential(new Double(voltages[i]), UNITS.V), 0, i);
       }
       if (gains != null && gains[i] != null) {
         store.setDetectorSettingsGain(new Double(gains[i]), 0, i);
@@ -601,7 +613,7 @@ public class FluoviewReader extends BaseTiffReader {
   private void initAlternateMetadataStore() throws FormatException {
     MetadataStore store = makeFilterMetadata();
     store.setImagingEnvironmentTemperature(
-      new Double(temperature.floatValue()), 0);
+      new Temperature(new Double(temperature.floatValue()), UNITS.DEGREEC), 0);
 
     String instrumentID = MetadataTools.createLSID("Instrument", 0);
     String detectorID = MetadataTools.createLSID("Detector", 0, 0);
@@ -620,7 +632,7 @@ public class FluoviewReader extends BaseTiffReader {
     for (int i=0; i<getEffectiveSizeC(); i++) {
       store.setDetectorSettingsID(detectorID, 0, i);
       store.setDetectorSettingsReadOutRate(
-        new Double(readoutTime.floatValue()), 0, i);
+        new Frequency(new Double(readoutTime.floatValue()), UNITS.HZ), 0, i);
     }
   }
 
