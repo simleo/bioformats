@@ -334,7 +334,7 @@ public class DFSHandle implements IRandomAccess {
     if (stream == null) {
       throw new HandleException("This stream is write-only.");
     }
-    return stream.skipBytes(n);
+    return (int) Math.min(stream.skipBytes(n), length());
   }
 
   // -- DataOutput API metthods --
