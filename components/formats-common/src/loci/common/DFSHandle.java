@@ -172,8 +172,14 @@ public class DFSHandle implements IRandomAccess {
     if (stream == null) {
       throw new HandleException("This stream is write-only.");
     }
-    int readLength = stream.read(b, off, len);  // -1 if EOF has been reached
-    return readLength == -1 ? 0 : readLength;
+    int readLength = 0;
+    int n;
+    while (readLength < len) {
+      n = stream.read(b, off + readLength, len - readLength);
+      if (n < 0) break;  // EOF
+      readLength += n;
+    }
+    return readLength;
   }
 
   /* @see IRandomAccess.read(ByteBuffer) */
