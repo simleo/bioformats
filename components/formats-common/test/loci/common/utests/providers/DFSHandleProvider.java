@@ -63,6 +63,9 @@ class DFSHandleProvider implements IRandomAccessProvider {
     Configuration conf = new Configuration();
     FileSystem fs = FileSystem.get(conf);  // FIXME: use MiniDFSCluster
     FSDataOutputStream stream = fs.create(path);
+    //--
+    System.out.println("   * HDFS PATH: " + fs.getFileStatus(path).getPath().toString());
+    //--
     try {
       stream.write(page);
     } finally {
