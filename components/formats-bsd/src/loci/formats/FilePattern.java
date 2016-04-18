@@ -226,14 +226,7 @@ public class FilePattern {
 
   /** Gets the pattern's text string before any numerical ranges. */
   public String getPrefix() {
-    int s = pattern.lastIndexOf(File.separator) + 1;
-    int e;
-    if (startIndex.length > 0) e = startIndex[0];
-    else {
-      int dot = pattern.lastIndexOf(".");
-      e = dot < s ? pattern.length() : dot;
-    }
-    return s <= e ? pattern.substring(s, e) : "";
+    return getPrefix(0);
   }
 
   /** Gets the pattern's text string after all numerical ranges. */
@@ -245,10 +238,9 @@ public class FilePattern {
   /** Gets the pattern's text string before the given numerical block. */
   public String getPrefix(int i) {
     if (i < 0 || i >= startIndex.length) return null;
-    int s = i > 0 ? endIndex[i - 1] :
-      (pattern.lastIndexOf(File.separator) + 1);
+    int s = i > 0 ? endIndex[i - 1] : 0;
     int e = startIndex[i];
-    return s <= e ? pattern.substring(s, e) : null;
+    return s <= e ? pattern.substring(s, e) : "";
   }
 
   /** Gets the pattern's text string before each numerical block. */
