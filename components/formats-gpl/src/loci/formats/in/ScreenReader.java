@@ -54,6 +54,7 @@ import loci.formats.ImageReader;
 import loci.formats.Memoizer;
 import loci.formats.MetadataTools;
 import loci.formats.MissingLibraryException;
+import loci.formats.AxisGuesser;
 import loci.formats.meta.MetadataStore;
 import loci.formats.ome.OMEXMLMetadata;
 import loci.formats.ome.OMEXMLMetadataImpl;
@@ -79,6 +80,7 @@ public class ScreenReader extends FormatReader {
   private String[] plateMetadataFiles;
   private String[][] files;
   private String[] ordering;
+  private int[][] axisTypes;
   private int[][][] fileIndexes;
 
   private Class<? extends IFormatReader> chosenReader = null;
@@ -87,6 +89,30 @@ public class ScreenReader extends FormatReader {
   private int fields, wells;
   private HashMap<Integer, Integer> seriesMap = new HashMap<Integer, Integer>();
   private HashMap<Integer, Integer> spotMap = new HashMap<Integer, Integer>();
+
+  private static int[] readAxisTypes(String iniEntry) throws FormatException {
+    if (null == iniEntry) {
+      return null;
+    }
+    int size = iniEntry.length();
+    int[] ret = new int[size];
+    for (int i = 0; i < size; i++) {
+      switch (iniEntry.charAt(i)) {
+      case 'C':
+        ret[i] = AxisGuesser.C_AXIS;
+        break;
+      case 'T':
+        ret[i] = AxisGuesser.T_AXIS;
+        break;
+      case 'Z':
+        ret[i] = AxisGuesser.Z_AXIS;
+        break;
+      default:
+        throw new FormatException("invalid axis types: " + iniEntry);
+      }
+    }
+    return ret;
+  }
 
   // -- Constructor --
 
@@ -220,6 +246,7 @@ public class ScreenReader extends FormatReader {
       spotMap.clear();
       files = null;
       ordering = null;
+      axisTypes = null;
       fileIndexes = null;
     }
   }
@@ -283,6 +310,7 @@ public class ScreenReader extends FormatReader {
     wells = maxRow * maxCol;
     files = new String[wells * fields][1];
     ordering = new String[wells * fields];
+    axisTypes = new int[wells * fields][];
     fileIndexes = new int[wells * fields][][];
 
     for (int well=0; well<wells; well++) {
@@ -308,6 +336,7 @@ public class ScreenReader extends FormatReader {
         if (ordering[index] != null) {
           ordering[index] = "XY" + ordering[index];
         }
+        axisTypes[index] = readAxisTypes(wellTable.get("AxisTypes"));
       }
     }
 
@@ -368,6 +397,10 @@ public class ScreenReader extends FormatReader {
         reader.setId(files[well][0]);
       }
 
+      if (null != axisTypes[well]) {
+        stitcher.setAxisTypes(axisTypes[well]);
+        reader.setId(files[well][0]);
+      }
       if (ordering[well] != null && reader instanceof DimensionSwapper) {
         ((DimensionSwapper) reader).swapDimensions(ordering[well]);
       }
