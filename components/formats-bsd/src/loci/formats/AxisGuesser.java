@@ -310,6 +310,32 @@ public class AxisGuesser {
     }
   }
 
+  /**
+   * Alternate constuctor where axis types are externally assigned. In
+   * this case, {@link #getAxisTypes} simply returns the given array,
+   * but other methods are still useful. Note that if this constructor
+   * is used, {@link #getFilePattern} will return <code>null</code>.
+   */
+  public AxisGuesser(int[] axisTypes, String dimOrder,
+      int sizeZ, int sizeT, int sizeC, boolean isCertain) {
+    this.axisTypes = axisTypes;
+    this.dimOrder = newOrder = dimOrder;
+    certain = isCertain;
+    if (!certain) {
+      boolean haveZ = false, haveT = false;
+      for (int t : axisTypes) {
+        if (t == Z_AXIS) {
+          haveZ = true;
+        }
+        if (t == T_AXIS) {
+          haveT = true;
+        }
+      }
+      swapZT(sizeZ, sizeT, haveZ, haveT);
+    }
+  }
+
+
   // -- AxisGuesser API methods --
 
   /** Gets the file pattern. */
