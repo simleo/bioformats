@@ -105,6 +105,24 @@ public class AxisGuesser {
   /** Whether the guesser is confident that all axis types are correct. */
   protected boolean certain;
 
+  // -- Helpers --
+
+  private boolean swapZT(int sizeZ, int sizeT, boolean haveZ, boolean haveT) {
+    boolean wrongZ = haveZ && !haveT && sizeZ > 1 && sizeT == 1;
+    boolean wrongT = haveT && !haveZ && sizeT > 1 && sizeZ == 1;
+    if (wrongZ || wrongT) {
+        int indexZ = newOrder.indexOf('Z');
+        int indexT = newOrder.indexOf('T');
+        char[] ch = newOrder.toCharArray();
+        ch[indexZ] = 'T';
+        ch[indexT] = 'Z';
+        newOrder = new String(ch);
+        return true;
+    } else {
+      return false;
+    }
+  }
+
   // -- Constructor --
 
   /**
@@ -248,16 +266,7 @@ public class AxisGuesser {
     // -- 2) check for special cases where dimension order should be swapped --
 
     if (!isCertain) { // only switch if dimension order is uncertain
-      if (foundZ && !foundT && sizeZ > 1 && sizeT == 1 ||
-        foundT && !foundZ && sizeT > 1 && sizeZ == 1)
-      {
-        // swap Z and T dimensions
-        int indexZ = newOrder.indexOf('Z');
-        int indexT = newOrder.indexOf('T');
-        char[] ch = newOrder.toCharArray();
-        ch[indexZ] = 'T';
-        ch[indexT] = 'Z';
-        newOrder = new String(ch);
+      if (swapZT(sizeZ, sizeT, foundZ, foundT)) {
         int sz = sizeT;
         sizeT = sizeZ;
         sizeZ = sz;
