@@ -388,6 +388,9 @@ public class ScreenReader extends FormatReader {
       }
       LOGGER.debug("Initializing pattern {} for spot {}", files[well], well);
       reader.close();
+      if (null != axisTypes[well]) {
+        stitcher.overrideAxisTypes(axisTypes[well]);
+      }
       reader.setId(files[well][0]);
 
       // At this point, we have a concrete reader. Use it
@@ -404,10 +407,6 @@ public class ScreenReader extends FormatReader {
         reader.setId(files[well][0]);
       }
 
-      if (null != axisTypes[well]) {
-        stitcher.setAxisTypes(axisTypes[well]);
-        reader.setId(files[well][0]);
-      }
       if (ordering[well] != null && reader instanceof DimensionSwapper) {
         ((DimensionSwapper) reader).swapDimensions(ordering[well]);
       }
