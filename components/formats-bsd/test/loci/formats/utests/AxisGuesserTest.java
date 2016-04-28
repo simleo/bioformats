@@ -146,6 +146,16 @@ public class AxisGuesserTest {
     checkAxisCount(ag, types);
   }
 
+  private void checkAlt(
+      int[] types, String order, int sZ, int sT, int sC, boolean cert,  // IN
+      String newOrder) {                                                // OUT
+    AxisGuesser ag = new AxisGuesser(types, order, sZ, sT, sC, cert);
+    assertEquals(ag.getOriginalOrder(), order);
+    assertEquals(ag.getAdjustedOrder(), newOrder);
+    assertEquals(ag.getAxisTypes(), types);
+    checkAxisCount(ag, types);
+  }
+
   private void checkAxisCount(AxisGuesser ag, int[] axisTypes) {
     // Should be as simple as possible
     int countZ = 0, countT = 0, countC = 0, countS = 0;
@@ -198,6 +208,7 @@ public class AxisGuesserTest {
     String order = "XYZCT";
     String newOrder = isCertain ? order : "XYTCZ";
     check(pattern, order, sZ, sT, 1, isCertain, newOrder, types);
+    checkAlt(types, order, sZ, sT, 1, isCertain, newOrder);
   }
 
   @Test(dataProvider = "fillInCases")
