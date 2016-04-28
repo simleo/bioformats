@@ -98,17 +98,8 @@ public class ScreenReader extends FormatReader {
     int size = iniEntry.length();
     int[] ret = new int[size];
     for (int i = 0; i < size; i++) {
-      switch (iniEntry.charAt(i)) {
-      case 'C':
-        ret[i] = AxisGuesser.C_AXIS;
-        break;
-      case 'T':
-        ret[i] = AxisGuesser.T_AXIS;
-        break;
-      case 'Z':
-        ret[i] = AxisGuesser.Z_AXIS;
-        break;
-      default:
+      ret[i] = AxisGuesser.getAxisType(String.valueOf(iniEntry.charAt(i)));
+      if (ret[i] == AxisGuesser.UNKNOWN_AXIS) {
         throw new FormatException("invalid axis types: " + iniEntry);
       }
     }
