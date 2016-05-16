@@ -159,6 +159,16 @@ public class FilePatternReader extends FormatReader {
   }
 
   @Override
+  public void setSeries(int no) {
+    helper.setSeries(no);
+  }
+
+  @Override
+  public void setCoreIndex(int no) {
+    helper.setCoreIndex(no);
+  }
+
+  @Override
   public void setGroupFiles(boolean group) {
     helper.setGroupFiles(group);
   }
