@@ -38,6 +38,8 @@ import static ome.xml.model.Pixels.getPhysicalSizeZUnitXsdDefault;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -120,7 +122,9 @@ public class FakeReader extends FormatReader {
   private static final String ROI_PREFIX = "ROI:";
   private static final String SHAPE_PREFIX = "Shape:";
 
-  public static final int BOX_SIZE = 10;
+  /* Minimum size of plane info (5 ints + 1 empty null-terminated string) */
+  private static final int MIN_INFO_SIZE = 21;
+
   private static final int ROI_SPACING = 10;
 
   public static final int DEFAULT_SIZE_X = 512;
@@ -134,8 +138,12 @@ public class FakeReader extends FormatReader {
 
   private static final String TOKEN_SEPARATOR = "&";
   private static final long SEED = 0xcafebabe;
+  private static final Charset CHARSET = StandardCharsets.UTF_8;
 
   // -- Fields --
+
+  /* image name (first token) */
+  private String name;
 
   /* dimensions per image */
   private int sizeX = DEFAULT_SIZE_X;
@@ -207,6 +215,29 @@ public class FakeReader extends FormatReader {
 
   private OMEXMLService omeXmlService;
 
+  private boolean doEncodeInfo = false;
+
+  public static class AddPlaneInfo {
+    private int series, no, z, c, t;
+    private String name;
+
+    public AddPlaneInfo(int series, int no, int z, int c, int t, String name) {
+      this.series = series;
+      this.no = no;
+      this.z = z;
+      this.c = c;
+      this.t = t;
+      this.name = name;
+    }
+
+    public int getSeries() { return series; }
+    public int getNo() { return no; }
+    public int getZ() { return z; }
+    public int getC() { return c; }
+    public int getT() { return t; }
+    public String getName() { return name; }
+  }
+
   // -- Constructor --
 
   /** Constructs a new fake reader. */
@@ -225,6 +256,42 @@ public class FakeReader extends FormatReader {
   @Override
   public short[][] get16BitLookupTable() throws FormatException, IOException {
     return ac < 0 || lut16 == null ? null : lut16[ac];
+  }
+
+  private void encodeInfo(int no, byte[] plane) {
+    if (plane.length < MIN_INFO_SIZE) {
+      return;
+    }
+    int[] zct = getZCTCoords(no);
+    ByteBuffer buf = ByteBuffer.wrap(plane);
+    buf.putInt(getSeries());
+    buf.putInt(no);
+    for (int i = 0; i < zct.length; i++) {
+      buf.putInt(zct[i]);
+    }
+    byte[] nameData = name.getBytes(CHARSET);
+    int n;
+    for (n = 0; n < nameData.length && nameData[n] != 0; n++);
+    buf.put(nameData, 0, Math.min(n, buf.remaining() - 1));
+    buf.put((byte) 0);
+  }
+
+  public static AddPlaneInfo decodeInfo(byte[] plane) {
+    if (plane.length < MIN_INFO_SIZE) {
+      return null;
+    }
+    ByteBuffer buf = ByteBuffer.wrap(plane);
+    int s = buf.getInt();
+    int no = buf.getInt();
+    int z = buf.getInt();
+    int c = buf.getInt();
+    int t = buf.getInt();
+    // decode image name
+    int i = buf.position();
+    int j;
+    for (j = i; j < plane.length && plane[j] != 0; j++);
+    String name = new String(plane, i, j - i, CHARSET);
+    return new AddPlaneInfo(s, no, z, c, t, name);
   }
 
   @Override
@@ -259,33 +326,6 @@ public class FakeReader extends FormatReader {
           int xx = x + col;
           long pixel = min + xx;
 
-          // encode various information into the image plane
-          boolean specialPixel = false;
-          if (yy < BOX_SIZE) {
-            int grid = xx / BOX_SIZE;
-            specialPixel = true;
-            switch (grid) {
-              case 0:
-                pixel = s;
-                break;
-              case 1:
-                pixel = no;
-                break;
-              case 2:
-                pixel = zIndex;
-                break;
-              case 3:
-                pixel = channel;
-                break;
-              case 4:
-                pixel = tIndex;
-                break;
-              default:
-                // just a normal pixel in the gradient
-                specialPixel = false;
-            }
-          }
-
           // if indexed color with non-null LUT, convert value to index
           if (indexed) {
             if (lut8 != null) pixel = valueToIndex[ac][(int) (pixel % 256)];
@@ -296,19 +336,13 @@ public class FakeReader extends FormatReader {
           // if floating point, convert value to raw IEEE floating point bits
           switch (pixelType) {
             case FormatTools.FLOAT:
-              float floatPixel;
-              if (specialPixel) floatPixel = pixel;
-              else floatPixel = (float) (scaleFactor * pixel);
-              pixel = Float.floatToIntBits(floatPixel);
+              pixel = Float.floatToIntBits((float) (scaleFactor * pixel));
               break;
             case FormatTools.DOUBLE:
-              double doublePixel;
-              if (specialPixel) doublePixel = pixel;
-              else doublePixel = scaleFactor * pixel;
-              pixel = Double.doubleToLongBits(doublePixel);
+              pixel = Double.doubleToLongBits(scaleFactor * pixel);
               break;
             default:
-              if (!specialPixel) pixel = (long) (scaleFactor * pixel);
+              pixel = (long) (scaleFactor * pixel);
           }
 
           // unpack pixel into byte buffer
@@ -321,6 +355,7 @@ public class FakeReader extends FormatReader {
       }
     }
 
+    if (doEncodeInfo) encodeInfo(no, buf);
     return buf;
   }
 
@@ -494,7 +529,7 @@ public class FakeReader extends FormatReader {
       tokens = noExt.split(TOKEN_SEPARATOR);
     }
 
-    String name = null;
+    name = null;
 
     int thumbSizeX = 0; // default
     int thumbSizeY = 0; // default
@@ -646,6 +681,7 @@ public class FakeReader extends FormatReader {
         }
         color.set(index, parseColor(value));
       }
+      else if (key.equals("encodeInfo")) doEncodeInfo = boolValue;
     }
 
     // do some sanity checks

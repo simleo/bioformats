@@ -64,7 +64,7 @@ public class FileStitcherTest {
   private static final int SIZE_T = 4;
   private static final int SIZE_C = 3;
   private static final String TEMPLATE =
-    "%s&pixelType=%s&sizeX=%d&sizeY=%d&sizeZ=%d&sizeT=%d&sizeC=%d.fake";
+    "%s&pixelType=%s&sizeX=%d&sizeY=%d&sizeZ=%d&sizeT=%d&sizeC=%d&encodeInfo=true.fake";
   private static final String[] DIM_TAGS = {"Z", "T", "C"};
   private static final int[] DIMS = {SIZE_Z, SIZE_T, SIZE_C};
 
@@ -101,11 +101,10 @@ public class FileStitcherTest {
   }
 
   private static int[] readSpecialPixels(byte[] plane) {
-    int[] idx = new int[5];  // S, no., Z, C, T
-    for (int i = 0; i < idx.length; i++) {
-      idx[i] = plane[i * FakeReader.BOX_SIZE] & 0xFF;
-    }
-    return idx;
+    FakeReader.AddPlaneInfo info = FakeReader.decodeInfo(plane);
+    return new int[] {
+      info.getSeries(), info.getNo(), info.getZ(), info.getC(), info.getT()
+    };
   }
 
   private static List<Integer> range(Integer len) {
