@@ -113,9 +113,9 @@ public class AutoscaleTest {
     testA(ui16,  noCal,   eMin,   eMax);
     testA(ui32,  noCal,   eMin,   eMax);
     // signed integer types, with autoscaling
-    testA(si08, sMin08, sMin08,    0.0);
-    testA(si16, sMin16, sMin16,    0.0);
-    testA(si32,  noCal, sMin32,    0.0);
+    testA(si08, sMin08, sMin08, esMax08);
+    testA(si16, sMin16, sMin16, esMax16);
+    //testA(si32,  noCal, sMin32, esMax32);
     // floating point types, with autoscaling
     testA( f32,  noCal,   eMin,   eMax);
     testA( f64,  noCal,   eMin,   eMax);
@@ -149,9 +149,9 @@ public class AutoscaleTest {
     testA(ui16,  noCal,   eMin,   eMax,   eMin,   eMax,   eMin,   eMax);
     testA(ui32,  noCal,   eMin,   eMax,   eMin,   eMax,   eMin,   eMax);
     // signed integer types, with autoscaling
-    testA(si08, sMin08, sMin08,    0.0, sMin08,    1.0, sMin08,    2.0);
-    testA(si16, sMin16, sMin16,    0.0, sMin16,    1.0, sMin16,    2.0);
-    testA(si32,  noCal, sMin32,    0.0, sMin32,    1.0, sMin32,    2.0);
+    testA(si08, sMin08, sMin08, esMax08, sMin08, esMax08, sMin08, esMax08);
+    testA(si16, sMin16, sMin16, esMax16, sMin16, esMax16, sMin16, esMax16);
+    testA(si32,  noCal, sMin32, esMax32, sMin32, esMax32, sMin32, esMax32);
     // floating point types, with autoscaling
     testA( f32,  noCal,   eMin,   eMax,   eMin,   eMax,   eMin,   eMax);
     testA( f64,  noCal,   eMin,   eMax,   eMin,   eMax,   eMin,   eMax);
