@@ -43,13 +43,16 @@ import loci.common.Location;
 import loci.formats.FormatTools;
 import loci.formats.FileStitcher;
 import loci.formats.FormatException;
+import loci.formats.IFormatReader;
 import loci.formats.in.FakeReader;
+import loci.formats.in.DefaultMetadataOptions;
 
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertEqualsNoOrder;
+import static org.testng.Assert.assertNotNull;
 import static loci.formats.FilePatternBlock.BLOCK_START;
 import static loci.formats.FilePatternBlock.BLOCK_END;
 
@@ -110,8 +113,16 @@ public class FileStitcherTest {
 
   private static void check(String pattern, String[] filenames, Integer[] dims)
       throws IOException, FormatException {
+    String k = "filestitcher.test.option";
+    String expv = "foo";
     FileStitcher fs = new FileStitcher();
+    ((DefaultMetadataOptions) fs.getMetadataOptions()).set(k, expv);
     fs.setId(pattern);
+    for (IFormatReader r: fs.getUnderlyingReaders()) {
+      String v = ((DefaultMetadataOptions) r.getMetadataOptions()).get(k);
+      assertNotNull(v);
+      assertEquals(v, expv);
+    }
     assertEquals(fs.getFilePattern().getPattern(), pattern);
     assertEquals(fs.getImageCount(), SIZE_Z * SIZE_T * SIZE_C);
     assertEquals(fs.getSizeX(), SIZE_X);
