@@ -46,6 +46,7 @@ import loci.common.DateTools;
 import loci.common.Location;
 import loci.common.RandomAccessInputStream;
 import loci.common.xml.XMLTools;
+import loci.formats.IFormatReader;
 import loci.formats.CoreMetadata;
 import loci.formats.FormatException;
 import loci.formats.FormatTools;
@@ -246,6 +247,18 @@ public class MetamorphReader extends BaseTiffReader {
       }
     }
     return v.toArray(new String[v.size()]);
+  }
+
+  @Override
+  public IFormatReader[] getUnderlyingReaders() {
+    List<IFormatReader> list = new ArrayList<IFormatReader>();
+    for (IFormatReader[] readers: stkReaders) {
+      for (IFormatReader r: readers) {
+        list.add(r);
+      }
+    }
+    IFormatReader[] underlyingReaders = new IFormatReader[list.size()];
+    return list.toArray(underlyingReaders);
   }
 
   /**
