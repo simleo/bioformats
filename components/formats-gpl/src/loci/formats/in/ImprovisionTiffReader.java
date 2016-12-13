@@ -33,6 +33,7 @@ import loci.common.DataTools;
 import loci.common.Location;
 import loci.common.RandomAccessInputStream;
 import loci.formats.CoreMetadata;
+import loci.formats.IFormatReader;
 import loci.formats.FormatException;
 import loci.formats.FormatTools;
 import loci.formats.MetadataTools;
@@ -133,6 +134,11 @@ public class ImprovisionTiffReader extends BaseTiffReader {
       return super.get16BitLookupTable();
     }
     return readers[lastFile].get16BitLookupTable();
+  }
+
+  @Override
+  public IFormatReader[] getUnderlyingReaders() {
+    return readers;
   }
 
   /**
@@ -290,6 +296,7 @@ public class ImprovisionTiffReader extends BaseTiffReader {
     readers = new MinimalTiffReader[files.length];
     for (int i=0; i<readers.length; i++) {
       readers[i] = new MinimalTiffReader();
+      readers[i].setMetadataOptions(getMetadataOptions());
       readers[i].setId(files[i]);
     }
 
