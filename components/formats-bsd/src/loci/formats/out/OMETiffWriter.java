@@ -33,6 +33,7 @@
 package loci.formats.out;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -106,13 +107,21 @@ public class OMETiffWriter extends TiffWriter {
           populateImage(omeMeta, series);
         }
 
+        String companion = "test.companion.ome";
+        String companionXML = getOMEXML(companion);
+        PrintWriter out = new PrintWriter(companion);
+        out.println(companionXML);
+        out.close();
+        String companionUUID =
+          "urn:uuid:" + getUUID(new Location(companion).getName());
+
         List<String> files = new ArrayList<String>();
         for (String[] s : imageLocations) {
           for (String f : s) {
             if (!files.contains(f) && f != null) {
               files.add(f);
 
-              String xml = getOMEXML(f);
+              String xml = getBinaryOnlyOMEXML(f, companion, companionUUID);
               if (getMetadataOptions().isValidate()) {
                 service.validateOMEXML(xml);
               }
@@ -262,6 +271,34 @@ public class OMETiffWriter extends TiffWriter {
     String xml;
     try {
       xml = service.getOMEXML(omeMeta);
+    }
+    catch (ServiceException se) {
+      throw new FormatException(se);
+    }
+
+    // insert warning comment
+    String prefix = xml.substring(0, xml.indexOf('>') + 1);
+    String suffix = xml.substring(xml.indexOf('>') + 1);
+    return prefix + WARNING_COMMENT + suffix;
+  }
+
+  private String getBinaryOnlyOMEXML(
+      String file, String companion, String companionUUID)
+    throws FormatException, IOException, DependencyException, ServiceException {
+    ServiceFactory factory = new ServiceFactory();
+    OMEXMLService service = factory.getInstance(OMEXMLService.class);
+    OMEXMLMetadata meta = service.createOMEXMLMetadata();
+    String uuid = "urn:uuid:" + getUUID(new Location(file).getName());
+    meta.setUUID(uuid);
+    meta.setBinaryOnlyMetadataFile(companion);
+    meta.setBinaryOnlyUUID(companionUUID);
+
+    OMEXMLMetadataRoot root = (OMEXMLMetadataRoot) meta.getRoot();
+    root.setCreator(FormatTools.CREATOR);
+
+    String xml;
+    try {
+      xml = service.getOMEXML(meta);
     }
     catch (ServiceException se) {
       throw new FormatException(se);
